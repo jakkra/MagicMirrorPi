@@ -27,5 +27,4 @@ public class TemperatureSensorReader {
     public double readTemperatureFirstSensor(){
         return readAllTemperatureSensors().get(0);
     }
-
 }

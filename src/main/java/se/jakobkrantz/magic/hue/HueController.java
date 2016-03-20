@@ -17,12 +17,18 @@ import com.philips.lighting.model.PHLight;
 import com.philips.lighting.model.PHLightState;
 
 import java.util.List;
+import java.util.concurrent.RunnableFuture;
 
 public class HueController {
 
     private PHHueSDK phHueSDK;
     private static final int MAX_HUE = 65535;
     private boolean isConnected = false;
+    private int currentBrightness;
+    private String[] lights = {"BOTH", "BED", "HALLWAY"};
+    private int lightIndex = 0;
+    private boolean shouldPulse = false;
+
 
     public HueController() {
         this.phHueSDK = PHHueSDK.getInstance();
@@ -30,6 +36,7 @@ public class HueController {
         phHueSDK.setAppName("MagicMirror");
         phHueSDK.setDeviceName("RaspberryPi");
         phHueSDK.getNotificationManager().registerSDKListener(getListener());
+        currentBrightness = 0;
 
     }
 
@@ -115,7 +122,6 @@ public class HueController {
 
             } else if (code == PHMessageType.BRIDGE_NOT_FOUND) {
                 System.out.println("bridge not found");
-
             } else {
                 System.out.println("idk what happend");
             }
@@ -138,8 +144,8 @@ public class HueController {
     }
 
     public void toggleAllLights(boolean on) {
-        System.out.println("All lights");
-        if(!isConnected){
+        currentBrightness = on ? 254 : 0;
+        if (!isConnected) {
             System.out.println("Not connected to bridge yet! Wait a second :)");
             return;
         }
@@ -150,9 +156,104 @@ public class HueController {
         List<PHLight> allLights = cache.getAllLights();
 
         for (PHLight light : allLights) {
+            System.out.println(light.getName());
             PHLightState lightState = new PHLightState();
             lightState.setOn(on);
-            bridge.updateLightState(light, lightState); // If no bridge response is required then use this simpler form.
+            lightState.setBrightness(254);
+            if (lights[lightIndex].equals(light.getName()) || lights[lightIndex].equals("BOTH")) {
+                bridge.updateLightState(light, lightState);
+            }
+        }
+    }
+
+    public void dimAllLights(int percent) {
+        if (!isConnected) {
+            System.out.println("Not connected to bridge yet! Wait a second :)");
+            return;
+        }
+        currentBrightness = percent;
+        PHBridge bridge = phHueSDK.getSelectedBridge();
+        PHBridgeResourcesCache cache = bridge.getResourceCache();
+
+        List<PHLight> allLights = cache.getAllLights();
+
+        PHLightState lightState = new PHLightState();
+        lightState.setBrightness(percent);
+        for (PHLight light : allLights) {
+            if (lights[lightIndex].equals(light.getName()) || lights[lightIndex].equals("BOTH")) {
+                bridge.updateLightState(light, lightState);
+            }
+        }
+    }
+
+    public void pulseLights() {
+        if (!isConnected) {
+            System.out.println("Not connected to bridge yet! Wait a second :)");
+            return;
+        }
+        PHBridge bridge = phHueSDK.getSelectedBridge();
+        PHBridgeResourcesCache cache = bridge.getResourceCache();
+
+        List<PHLight> allLights = cache.getAllLights();
+
+        PHLightState lightState = new PHLightState();
+        lightState.setTransitionTime(30);
+        lightState.setBrightness(254);
+        shouldPulse = true;
+        new Thread(() -> {
+            boolean isOn = true;
+
+            while (shouldPulse) {
+                for (PHLight light : allLights) {
+                    if (lights[lightIndex].equals(light.getName()) || lights[lightIndex].equals("BOTH")) {
+                        lightState.setOn(isOn);
+                        bridge.updateLightState(light, lightState);
+                    }
+                }
+                isOn = !isOn;
+                System.out.println("---------------DISCO IS ON----------------------");
+
+                try {
+                    Thread.sleep(2500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("---------------Stopped pulsing-----------------------");
+        }).start();
+    }
+
+    public void stopPulsing() {
+        shouldPulse = false;
+    }
+
+
+    public void changeBrightness(boolean increase) {
+        if (!isConnected) {
+            System.out.println("Not connected to bridge yet! Wait a second :)");
+            return;
+        }
+        PHBridge bridge = phHueSDK.getSelectedBridge();
+        PHBridgeResourcesCache cache = bridge.getResourceCache();
+
+        List<PHLight> allLights = cache.getAllLights();
+
+        PHLightState lightState = new PHLightState();
+        if (increase) {
+            currentBrightness += 0.25 * 254;
+        } else {
+            currentBrightness -= 0.25 * 254;
+        }
+        if (currentBrightness > 254) {
+            currentBrightness = 254;
+        } else if (currentBrightness < 0) {
+            currentBrightness = 0;
+        }
+        lightState.setBrightness(currentBrightness);
+        for (PHLight light : allLights) {
+            if (lights[lightIndex].equals(light.getName()) || lights[lightIndex].equals("BOTH")) {
+                bridge.updateLightState(light, lightState);
+            }
         }
     }
 
@@ -174,5 +275,11 @@ public class HueController {
         accessPoint.setUsername(username);
         phHueSDK.connect(accessPoint);
         return true;
+    }
+
+    public void changeLightDestination() {
+        lightIndex++;
+        lightIndex %= 3;
+        System.out.println("SELECTED LIGHT: " + lights[lightIndex]);
     }
 }

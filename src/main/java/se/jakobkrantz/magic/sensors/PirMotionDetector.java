@@ -48,9 +48,9 @@ public class PirMotionDetector {
     }
 
     public interface MotionDetectionListener {
-        public void onMotionDetected();
+        void onMotionDetected();
 
-        public void onMotionStopped();
+        void onMotionStopped();
     }
 }
 

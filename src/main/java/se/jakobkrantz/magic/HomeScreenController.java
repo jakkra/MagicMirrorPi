@@ -32,8 +32,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class HomeScreenController implements Initializable {
-
-
     @FXML
     private Label nextJourneyLabel;
 
@@ -103,19 +101,39 @@ public class HomeScreenController implements Initializable {
         startVoiceCommands();
         hue = new HueController();
         hue.findBridges();
-
-
     }
 
     private void startVoiceCommands() {
         SpeechRecognizer speechRecognizer = new SpeechRecognizer();
         speechRecognizer.addListener(command -> {
-            System.out.println("Got voice command: " +command );
+            System.out.println("Got voice command: " + command);
             if (command.equals("PUT LIGHTS ON ")) {
                 hue.toggleAllLights(true);
             } else if (command.equals("TURN LIGHTS OFF ")) {
                 hue.toggleAllLights(false);
+                hue.stopPulsing();
+            } else if (command.equals("FIFTY FIFTY LIGHTS ")){
+                System.out.println("Dimming lights");
+                hue.dimAllLights(125);
+            } else if(command.equals("UP THE BRIGHTNESS ")){
+                hue.changeBrightness(true);
+            } else if(command.equals("DECREASE BRIGHTNESS ")){
+                hue.changeBrightness(false);
+            } else if(command.equals("TIME TO SLEEP ")){
+                hue.dimAllLights(30);
+            } else if(command.equals("CHANGE LIGHT ")){
+                hue.changeLightDestination();
+            } else if(command.equals("START DISCO ")){
+                hue.pulseLights();
+            } else if(command.equals("STOP PULSING ")){
+                hue.stopPulsing();
             }
+
+            Platform.runLater(() -> {
+                greetingsLabel.setText(command);
+            });
+
+
         });
         speechRecognizer.start();
     }

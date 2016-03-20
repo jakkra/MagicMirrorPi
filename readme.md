@@ -22,7 +22,7 @@ TBA
 
 [PIR motion sensor of this type](https://learn.adafruit.com/pir-passive-infrared-proximity-motion-sensor)
 
-[Voice recognition with Pocketsphinx](https://github. com/cmusphinx/pocketsphinx)
+[Voice recognition with Pocketsphinx](https://github.com/cmusphinx/pocketsphinx)
 
 
 ##Licence

@@ -35,7 +35,6 @@ public class RouteLink {
     public static final int EARLY = 26;
     public static final int UNKNOWN_DEVIATION = 28;
 
-
     private String lineNbr; //Line's number
     private String runNbr; //Line's run number
     private int lineTypeId; //Reference to one line type in line types collection defined by transport authority. All available line types and ids can be retreved from GetMeansOfTransport function
