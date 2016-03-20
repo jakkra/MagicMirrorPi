@@ -7,8 +7,8 @@ package se.jakobkrantz.magic.downloaders;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-import skanetrafikenAPI.CoordinateRoute;
-import skanetrafikenAPI.XMLRouteMapHandler;
+import se.jakobkrantz.magic.skanetrafikenAPI.CoordinateRoute;
+import se.jakobkrantz.magic.skanetrafikenAPI.XMLRouteMapHandler;
 
 
 import javax.xml.parsers.ParserConfigurationException;

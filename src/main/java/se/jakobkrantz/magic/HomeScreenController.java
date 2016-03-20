@@ -21,7 +21,7 @@ import se.jakobkrantz.magic.speech.SpeechRecognizer;
 import se.jakobkrantz.magic.util.Greetings;
 import se.jakobkrantz.magic.util.TemperatureLogger;
 import se.jakobkrantz.magic.util.WeatherConditionCodes;
-import skanetrafikenAPI.*;
+import se.jakobkrantz.magic.skanetrafikenAPI.*;
 
 import java.io.IOException;
 import java.net.URL;

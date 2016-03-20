@@ -1,4 +1,4 @@
-package skanetrafikenAPI;
+package se.jakobkrantz.magic.skanetrafikenAPI;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

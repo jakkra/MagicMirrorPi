@@ -1,4 +1,4 @@
-package skanetrafikenAPI;
+package se.jakobkrantz.magic.skanetrafikenAPI;
 /*
  * Created by krantz on 14-11-20.
  */

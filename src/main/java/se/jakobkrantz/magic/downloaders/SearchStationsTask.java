@@ -7,8 +7,8 @@ package se.jakobkrantz.magic.downloaders;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-import skanetrafikenAPI.Station;
-import skanetrafikenAPI.XMLQueryStationHandler;
+import se.jakobkrantz.magic.skanetrafikenAPI.Station;
+import se.jakobkrantz.magic.skanetrafikenAPI.XMLQueryStationHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;

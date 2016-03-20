@@ -1,10 +1,8 @@
-package skanetrafikenAPI;
+package se.jakobkrantz.magic.skanetrafikenAPI;
 /*
  * Created by jakkra on 2015-03-03.
  */
 
-
-import java.util.List;
 
 public class CoordinateRoute {
     private Station from;

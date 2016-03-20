@@ -1,4 +1,4 @@
-package skanetrafikenAPI;
+package se.jakobkrantz.magic.skanetrafikenAPI;
 
 import java.util.Calendar;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package skanetrafikenAPI;
+package se.jakobkrantz.magic.skanetrafikenAPI;
 /*
  * Created by jakkra on 2015-03-02.
  */
