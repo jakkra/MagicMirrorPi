@@ -13,6 +13,8 @@ News are pulled from Yahoo News and Weather also from Yahoo.
 ## Plans
 - Voice controlling more than lights
 - Outside temperature using some small microprocessor and radio transmitter.
+
+
 ## Installation
 TBA
 
