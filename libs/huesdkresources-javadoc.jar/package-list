@@ -1,0 +1,5 @@
+com.philips.lighting.hue.listener
+com.philips.lighting.hue.sdk.utilities
+com.philips.lighting.model
+com.philips.lighting.model.rule
+com.philips.lighting.model.sensor
