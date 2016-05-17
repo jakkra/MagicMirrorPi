@@ -28,6 +28,7 @@ public class HueController {
     private String[] lights = {"BOTH", "BED", "HALLWAY"};
     private int lightIndex = 0;
     private boolean shouldPulse = false;
+    private int savedBrightness = 254;
 
 
     public HueController() {
@@ -61,7 +62,7 @@ public class HueController {
                 System.out.println(accessPointsList.get(0).getBridgeId());
                 phHueSDK.connect(accessPointsList.get(0));
             } else {
-                System.out.println("Could not find any brdiges");
+                System.out.println("Could not find any bridges");
             }
         }
 
@@ -87,8 +88,6 @@ public class HueController {
             HueProperties.saveProperties();
 
             isConnected = true;
-
-
         }
 
         @Override
@@ -159,26 +158,26 @@ public class HueController {
             System.out.println(light.getName());
             PHLightState lightState = new PHLightState();
             lightState.setOn(on);
-            lightState.setBrightness(254);
+            lightState.setBrightness(savedBrightness);
             if (lights[lightIndex].equals(light.getName()) || lights[lightIndex].equals("BOTH")) {
                 bridge.updateLightState(light, lightState);
             }
         }
     }
 
-    public void dimAllLights(int percent) {
+    public void setBrightness(int brightness) {
         if (!isConnected) {
             System.out.println("Not connected to bridge yet! Wait a second :)");
             return;
         }
-        currentBrightness = percent;
+        currentBrightness = brightness;
         PHBridge bridge = phHueSDK.getSelectedBridge();
         PHBridgeResourcesCache cache = bridge.getResourceCache();
 
         List<PHLight> allLights = cache.getAllLights();
 
         PHLightState lightState = new PHLightState();
-        lightState.setBrightness(percent);
+        lightState.setBrightness(brightness);
         for (PHLight light : allLights) {
             if (lights[lightIndex].equals(light.getName()) || lights[lightIndex].equals("BOTH")) {
                 bridge.updateLightState(light, lightState);
@@ -249,6 +248,8 @@ public class HueController {
         } else if (currentBrightness < 0) {
             currentBrightness = 0;
         }
+        savedBrightness = currentBrightness;
+        System.out.println("Setting brightness: " + currentBrightness);
         lightState.setBrightness(currentBrightness);
         for (PHLight light : allLights) {
             if (lights[lightIndex].equals(light.getName()) || lights[lightIndex].equals("BOTH")) {
@@ -262,7 +263,7 @@ public class HueController {
      * Connect to the last known access point.
      * This method is triggered by the Connect to Bridge button but it can equally be used to automatically connect to a bridge.
      */
-    public boolean connectToLastKnownAccessPoint() {
+    private boolean connectToLastKnownAccessPoint() {
         String username = HueProperties.getUsername();
         String lastIpAddress = HueProperties.getLastConnectedIP();
 
@@ -277,9 +278,10 @@ public class HueController {
         return true;
     }
 
-    public void changeLightDestination() {
+    public String changeLightDestination() {
         lightIndex++;
         lightIndex %= 3;
-        System.out.println("SELECTED LIGHT: " + lights[lightIndex]);
+        return "SELECTED LIGHT: " + lights[lightIndex];
     }
+
 }
