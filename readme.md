@@ -7,11 +7,13 @@ At the moment it supports PIR motion detector and DS18B20 temperature sensor.
 It displays upcoming buses for some location in Skåne with Skånetrafiken. 
 News are pulled from Yahoo News and Weather also from Yahoo.
 
+New is voice recognition, which I currently use to control my Philips Hue lights.
+
 ![Mirror](pics/mirror.jpg)
 
 
 ## Plans
-- Voice controlling more than lights
+- Voice controlling more than lights.
 - Outside temperature using some small microprocessor and radio transmitter.
 
 
