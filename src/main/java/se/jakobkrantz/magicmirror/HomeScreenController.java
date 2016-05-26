@@ -125,6 +125,43 @@ public class HomeScreenController implements Initializable {
             @Override
             public void onNext(RecognizeResponse response) {
                 System.out.println("Received response: " + TextFormat.printToString(response));
+                String command = TextFormat.printToString(response);
+                System.out.println("Got voice command: " + command);
+                if (command.equals("PUT LIGHTS ON ")) {
+                    hue.toggleAllLights(true);
+                } else if (command.equals("TURN LIGHTS OFF ")) {
+                    hue.toggleAllLights(false);
+                    hue.stopPulsing();
+                } else if (command.equals("UP THE BRIGHTNESS ")) {
+                    hue.changeBrightness(true);
+                } else if (command.equals("REDUCE BRIGHTNESS ")) {
+                    hue.changeBrightness(false);
+                } else if (command.equals("time to sleep")) {
+                    hue.setBrightness(30);
+                } else if (command.equals("CHANGE LIGHT ")) {
+                    command = hue.changeLightDestination();
+                } else if (command.equals("PULSING LIGHT ") || command.equals("DISCO START ")) {
+                    hue.pulseLights();
+                } else if (command.equals("STOP PULSING ")) {
+                    hue.stopPulsing();
+                } else if (command.equals("MAXIMUM LIGHT LEVEL ")) {
+                    hue.setBrightness(254);
+                } else if (command.equals("HELP ME PLEASE ")) {
+                    command = "PUT LIGHTS ON\n" +
+                            "TURN LIGHTS OFF\n" +
+                            "UP THE BRIGHTNESS\n" +
+                            "REDUCE BRIGHTNESS\n" +
+                            "TIME TO SLEEP\n" +
+                            "CHANGE LIGHT\n" +
+                            "MAXIMUM LIGHT LEVEL\n" +
+                            "HELP ME";
+                }
+
+                final String destination = command;
+
+                Platform.runLater(() -> {
+                    greetingsLabel.setText(destination);
+                });
             }
 
             @Override
@@ -171,7 +208,6 @@ public class HomeScreenController implements Initializable {
                 e.printStackTrace();
             }
         }
-
     }
 
     private void startVoiceCommands() {
@@ -213,8 +249,6 @@ public class HomeScreenController implements Initializable {
             Platform.runLater(() -> {
                 greetingsLabel.setText(destination);
             });
-
-
         });
         speechRecognizer.start();
     }

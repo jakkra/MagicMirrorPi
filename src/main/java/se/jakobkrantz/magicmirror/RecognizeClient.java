@@ -57,8 +57,7 @@ public class RecognizeClient {
     private static final int CHANNELS = 1;
     private static final boolean SIGNED = true;
     private static final boolean BIG_ENDIAN = false;
-    private static final List<String> OAUTH2_SCOPES =
-            Arrays.asList("https://www.googleapis.com/auth/cloud-platform");
+    private static final List<String> OAUTH2_SCOPES = Arrays.asList("https://www.googleapis.com/auth/cloud-platform");
     private static ByteArrayOutputStream out;
     private static boolean running = true;
     private static AudioFormat format = new AudioFormat(SAMPLE_RATE, SAMPLE_SIZE_IN_BITS, CHANNELS, SIGNED, BIG_ENDIAN);
@@ -155,7 +154,6 @@ public class RecognizeClient {
                                 .setAudioRequest(audio)
                                 .build();
                         requestObserver.onNext(request);
-
                     }
 
                 } catch (Exception e) {
@@ -170,9 +168,6 @@ public class RecognizeClient {
         }
         // Mark the end of requests.
         requestObserver.onCompleted();
-
-        // Receiving happens asynchronously.
-        System.out.println("Stopping before isRec = false");
         runningSem.release();
         isRecognizing = false;
     }
