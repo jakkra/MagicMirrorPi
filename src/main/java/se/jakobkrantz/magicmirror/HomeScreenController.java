@@ -1,7 +1,9 @@
 package se.jakobkrantz.magicmirror;
 
-import se.jakobkrantz.magicmirror.downloaders.SearchJourneysTask;
-import se.jakobkrantz.magicmirror.downloaders.SearchStationsTask;
+import com.google.cloud.speech.v1.RecognizeResponse;
+import com.google.protobuf.TextFormat;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -10,12 +12,14 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
+import se.jakobkrantz.magicmirror.downloaders.SearchJourneysTask;
+import se.jakobkrantz.magicmirror.downloaders.SearchStationsTask;
 import se.jakobkrantz.magicmirror.hue.HueController;
 import se.jakobkrantz.magicmirror.sensors.PirMotionDetector;
+import se.jakobkrantz.magicmirror.skanetrafikenAPI.*;
 import se.jakobkrantz.magicmirror.smhi.*;
 import se.jakobkrantz.magicmirror.speech.SpeechRecognizer;
 import se.jakobkrantz.magicmirror.util.Greetings;
-import se.jakobkrantz.magicmirror.skanetrafikenAPI.*;
 
 import java.io.IOException;
 import java.net.URL;
@@ -74,14 +78,25 @@ public class HomeScreenController implements Initializable {
 
     private HueController hue;
     private SMHIWeatherAPI smhiWeatherAPI;
+    private RecognizeClient recognizeClient;
 
 
     public HomeScreenController() {
         smhiWeatherAPI = new SMHIWeatherAPI("13", "55.6");
+        String host = "speech.googleapis.com";
+        Integer port = 443;
+        Integer sampling = 16000;
+
+        try {
+            recognizeClient = new RecognizeClient(host, port, sampling);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        System.out.println("HomeScreenController.initialize");
         dayLabels = Arrays.asList(day1, day2, day3, day4, day5);
         lowLabels = Arrays.asList(tempLow1, tempLow2, tempLow3, tempLow4, tempLow5);
         highLabels = Arrays.asList(tempMax1, tempMax2, tempMax3, tempMax4, tempMax5);
@@ -101,6 +116,62 @@ public class HomeScreenController implements Initializable {
         //startVoiceCommands();
         hue = new HueController();
         hue.findBridges();
+    }
+
+    @FXML
+    public void startRecognize() {
+        System.out.println("HomeScreenController.startRecognize");
+        StreamObserver<RecognizeResponse> responseObserver = new StreamObserver<RecognizeResponse>() {
+            @Override
+            public void onNext(RecognizeResponse response) {
+                System.out.println("Received response: " + TextFormat.printToString(response));
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                Status status = Status.fromThrowable(error);
+                System.out.println("recognize failed: {0}" + status);
+                try {
+                    recognizeClient.shutdown();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("recognize completed.");
+            }
+        };
+        if (!recognizeClient.isRecognizing()) {
+            new Thread(() -> {
+                try {
+                    recognizeClient.recognize(responseObserver);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+            new java.util.Timer().schedule(
+                    new java.util.TimerTask() {
+                        @Override
+                        public void run() {
+                            try {
+                                recognizeClient.shutdown();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }, 30000
+            );
+
+        } else {
+            try {
+                recognizeClient.shutdown();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     private void startVoiceCommands() {
@@ -163,6 +234,29 @@ public class HomeScreenController implements Initializable {
      * Sets up and initializes the PIR motion detector
      */
     private void initMotionDetector() {
+        StreamObserver<RecognizeResponse> responseObserver = new StreamObserver<RecognizeResponse>() {
+            @Override
+            public void onNext(RecognizeResponse response) {
+                System.out.println("Received response: " + TextFormat.printToString(response));
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                System.out.println(error);
+                Status status = Status.fromThrowable(error);
+                System.out.println("recognize failed: {0}" + status);
+                try {
+                    recognizeClient.shutdown();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("recognize completed.");
+            }
+        };
         new Thread(() -> {
             PirMotionDetector motionDetector = new PirMotionDetector();
             motionDetector.setMotionDetectionListener(
@@ -173,6 +267,8 @@ public class HomeScreenController implements Initializable {
                                 System.out.println("Motion Detected!");
                                 showMessageDependingOnTime();
                             });
+
+                            startRecognize();
                         }
 
                         @Override

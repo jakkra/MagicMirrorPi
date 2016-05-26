@@ -181,11 +181,6 @@ limitations under the License.
             <version>1.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.kenai.nbpwr</groupId>
-            <artifactId>org-jdom</artifactId>
-            <version>1.0-201002261215</version>
-        </dependency>
 
 
 
@@ -240,6 +235,17 @@ limitations under the License.
         <!-- // [END os-maven-plugin] -->
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <version>3.1</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <brandingToken>metadata</brandingToken>
+                    <netbeansNbmDirectory>target/updates</netbeansNbmDirectory>
+                    <netbeansInstallDirectory>platform/target/metadata</netbeansInstallDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.5.0</version>
@@ -291,6 +297,13 @@ limitations under the License.
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>se.jakobkrantz.magicmirror.Main</mainClass>
+                        </manifest>
+                    </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>

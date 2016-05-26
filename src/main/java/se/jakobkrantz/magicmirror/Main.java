@@ -7,11 +7,29 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.net.URL;
+
 public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("mainScreen.fxml"));
+        String sceneFile = "/mainScreen.fxml";
+        Parent root = null;
+        URL url  = null;
+        try
+        {
+            url  = getClass().getResource( sceneFile );
+            root = FXMLLoader.load( url );
+            System.out.println( "  fxmlResource = " + sceneFile );
+        }
+        catch ( Exception ex )
+        {
+            System.out.println( "Exception on FXMLLoader.load()" );
+            System.out.println( "  * url: " + url );
+            System.out.println( "  * " + ex );
+            System.out.println( "    ----------------------------------------\n" );
+            throw ex;
+        }
         primaryStage.setTitle("Smart Mirror");
         Scene scene = new Scene(root, 1080, 1920);
         primaryStage.setScene(scene);

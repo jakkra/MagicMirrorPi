@@ -71,9 +71,9 @@ public class SpeechRecognizer extends Thread {
             e.printStackTrace();
         }
 
-        final String ACOUSTIC_MODEL = jarDir + "/grammar/en-us/en-us";
-        final String DICTIONARY = jarDir + "/grammar/8949.dic";
-        final String KEY_PHRASES = jarDir + "/grammar/keyphrase-list";
+        final String ACOUSTIC_MODEL = jarDir + "/src/main/resources/grammar/en-us/en-us";
+        final String DICTIONARY = jarDir + "/src/main/resources/grammar/8949.dic";
+        final String KEY_PHRASES = jarDir + "/src/main/resources/grammar/keyphrase-list";
 
         TargetDataLine recorder = null;
         DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
