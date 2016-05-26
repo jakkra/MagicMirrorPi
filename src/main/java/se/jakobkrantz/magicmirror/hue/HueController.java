@@ -152,7 +152,6 @@ public class HueController {
         PHBridgeResourcesCache cache = bridge.getResourceCache();
 
         List<PHLight> allLights = cache.getAllLights();
-
         for (PHLight light : allLights) {
             System.out.println(light.getName());
             PHLightState lightState = new PHLightState();
