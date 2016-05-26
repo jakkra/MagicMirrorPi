@@ -61,3 +61,5 @@ fabric.properties
 *bin
 *.bin
 *bin
+target/
+target/*
