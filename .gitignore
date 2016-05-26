@@ -63,3 +63,5 @@ fabric.properties
 *bin
 target/
 target/*
+# Google Cloud speech API credentals
+MagicMirror-eb21122c894f.json
