@@ -19,6 +19,7 @@ import se.jakobkrantz.magicmirror.sensors.PirMotionDetector;
 import se.jakobkrantz.magicmirror.skanetrafikenAPI.*;
 import se.jakobkrantz.magicmirror.smhi.*;
 import se.jakobkrantz.magicmirror.speech.SpeechRecognizer;
+import se.jakobkrantz.magicmirror.speech.VoiceParser;
 import se.jakobkrantz.magicmirror.util.Greetings;
 
 import java.io.IOException;
@@ -79,10 +80,12 @@ public class HomeScreenController implements Initializable {
     private HueController hue;
     private SMHIWeatherAPI smhiWeatherAPI;
     private RecognizeClient recognizeClient;
+    private VoiceParser voiceParser;
 
 
     public HomeScreenController() {
         smhiWeatherAPI = new SMHIWeatherAPI("13", "55.6");
+        voiceParser = new VoiceParser();
         String host = "speech.googleapis.com";
         Integer port = 443;
         Integer sampling = 16000;
@@ -125,13 +128,58 @@ public class HomeScreenController implements Initializable {
             @Override
             public void onNext(RecognizeResponse response) {
                 System.out.println("Received response: " + TextFormat.printToString(response));
-                String command = TextFormat.printToString(response);
-                System.out.println("Got voice command: " + command);
-                if (command.equals("PUT LIGHTS ON ")) {
-                    hue.toggleAllLights(true);
-                } else if (command.equals("TURN LIGHTS OFF ")) {
-                    hue.toggleAllLights(false);
-                    hue.stopPulsing();
+                String command = TextFormat.printToUnicodeString(response);
+                if(command.equals("") || command.equals(" ")){
+                    return;
+                }
+                VoiceParser.SpeechCommand cmd = voiceParser.parseText(command);
+                System.out.println("parsed command: " + cmd.toString());
+                switch (cmd) {
+                    case LIGHTS_ON_ALL:
+                        hue.changeLightDestination("BOTH");
+                        hue.toggleAllLights(true);
+                        break;
+                    case LIGHTS_OFF_ALL:
+                        hue.changeLightDestination("BOTH");
+                        hue.toggleAllLights(false);
+                        break;
+                    case LIGHTS_ON_HALLWAY:
+                        hue.changeLightDestination("HALLWAY");
+                        hue.toggleAllLights(true);
+                        break;
+                    case LIGHTS_OFF_HALLWAY:
+                        hue.changeLightDestination("HALLWAY");
+                        hue.toggleAllLights(false);
+                        break;
+                    case LIGHTS_ON_BEDROOM:
+                        hue.changeLightDestination("BED");
+                        hue.toggleAllLights(true);
+                        break;
+                    case LIGHTS_OFF_BEDROOM:
+                        hue.changeLightDestination("BED");
+                        hue.toggleAllLights(false);
+                        break;
+                    case LIGHTS_ON:
+                        hue.toggleAllLights(true);
+                        break;
+                    case LIGHTS_OFF:
+                        hue.toggleAllLights(false);
+                        hue.stopPulsing();
+                        break;
+                    case LIGHTS_CHANGE_ALL:
+                        hue.changeLightDestination("BOTH");
+                        break;
+                    case LIGHTS_CHANGE_BEDROOM:
+                        hue.changeLightDestination("BED");
+                        break;
+                    case LIGHTS_CHANGE_HALLWAY:
+                        hue.changeLightDestination("HALLWAY");
+                        break;
+                    case UNKNOWN:
+                        System.out.println("Command not found: " + command);
+                        break;
+                }
+               /*
                 } else if (command.equals("UP THE BRIGHTNESS ")) {
                     hue.changeBrightness(true);
                 } else if (command.equals("REDUCE BRIGHTNESS ")) {
@@ -156,6 +204,7 @@ public class HomeScreenController implements Initializable {
                             "MAXIMUM LIGHT LEVEL\n" +
                             "HELP ME";
                 }
+                */
 
                 final String destination = command;
 

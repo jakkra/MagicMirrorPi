@@ -47,7 +47,7 @@ public final class HueProperties {
     }
 
     public static String getLastConnectedIP() {
-        return props.getProperty(LAST_CONNECTED_IP);
+       return props.getProperty(LAST_CONNECTED_IP);
     }
 
     public static void loadProperties() {

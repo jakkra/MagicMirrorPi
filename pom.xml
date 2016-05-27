@@ -180,7 +180,11 @@ limitations under the License.
             <artifactId>huesdkresources</artifactId>
             <version>1.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>info.debatty</groupId>
+            <artifactId>java-string-similarity</artifactId>
+            <version>RELEASE</version>
+        </dependency>
 
 
 

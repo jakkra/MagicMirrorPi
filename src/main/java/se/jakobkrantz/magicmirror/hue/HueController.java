@@ -4,17 +4,8 @@ package se.jakobkrantz.magicmirror.hue;
  * Created by jakkra on 2016-03-19.
  */
 
-import com.philips.lighting.hue.sdk.PHAccessPoint;
-import com.philips.lighting.hue.sdk.PHBridgeSearchManager;
-import com.philips.lighting.hue.sdk.PHHueSDK;
-import com.philips.lighting.hue.sdk.PHMessageType;
-import com.philips.lighting.hue.sdk.PHSDKListener;
-import com.philips.lighting.model.PHBridge;
-import com.philips.lighting.model.PHBridgeResourcesCache;
-import com.philips.lighting.model.PHHueError;
-import com.philips.lighting.model.PHHueParsingError;
-import com.philips.lighting.model.PHLight;
-import com.philips.lighting.model.PHLightState;
+import com.philips.lighting.hue.sdk.*;
+import com.philips.lighting.model.*;
 
 import java.util.List;
 
@@ -279,6 +270,21 @@ public class HueController {
     public String changeLightDestination() {
         lightIndex++;
         lightIndex %= 3;
+        return "SELECTED LIGHT: " + lights[lightIndex];
+    }
+
+    public String changeLightDestination(String loc) {
+        switch (loc) {
+            case "BOTH":
+                lightIndex = 0;
+                break;
+            case "BED":
+                lightIndex = 1;
+                break;
+            case "HALLWAY":
+                lightIndex = 2;
+                break;
+        }
         return "SELECTED LIGHT: " + lights[lightIndex];
     }
 
