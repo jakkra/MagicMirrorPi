@@ -18,6 +18,12 @@ public class VoiceParser {
         LIGHTS_CHANGE_ALL,
         LIGHTS_CHANGE_BEDROOM,
         LIGHTS_CHANGE_HALLWAY,
+        HIDE_NEWS,
+        SHOW_NEWS,
+        HIDE_FORECASTS,
+        SHOW_FORECASTS,
+        CHANGE_NEWS_SOURCE,
+        NEXT_BUS,
         UNKNOWN,
     }
 
@@ -28,21 +34,66 @@ public class VoiceParser {
         UNKNOWN
     }
 
-    private String[] lampSynonymsSwedish = {"lampa", "lampan", "lampor", "lamporna", "ljus", "ljuset", "ljusen", "ljuset", "lyset"};
+    private String[] lampSynonymsSwedish = {"lampa", "lampan", "lampor", "lamporna", "ljus", "ljuset", "ljusen", "ljuset", "lyset", "taket", "i taket"};
     private String[] onSynonymsSwedish = {"sätt på", "till", "tänd", "tända", "starta"};
     private String[] offSynonymsSwedish = {"stäng av", "från", "släck", "släcka", "stoppa"};
     private String[] allSynonymsSwedish = {"alla", "samtliga"};
     private String[] bedroomSynonymsSwedish = {"säng", "sängen", "sängens", "sovrum", "sovrums", "sovrummet", "sovrummets"};
     private String[] hallwaySynonymsSwedish = {"hall", "hallen", "hallens", "dörr", "dörren"};
+    private String[] busSynonymsSwedish = {"bussen", "buss", "bus"};
+
 
     private String[] changeSynonymsSwedish = {"ändra", "byt", "ändra till"};
+    private String[] showSynonymsSwedish = {"visa", "starta", "ta fram"};
+    private String[] hideSynonymsSwedish = {"dölj", "stäng av", "ta bort", "göm"};
+    private String[] newsSynonymsSwedish = {"nyheter", "nyheterna", "artiklar", "artiklarna", "nyhetskälla"};
+    private String[] forecastsSynonymsSwedish = {"väder", "vädret", "prognos", "prognoserna"};
+    private String[] whenSynonymsSwedish = {"när", "byt", "går"};
+
+
 
 
     public SpeechCommand parseText(String s) {
         if (stringContainsItemFromList(s, lampSynonymsSwedish)) {
             return parseLights(s);
+        } else if (stringContainsItemFromList(s, forecastsSynonymsSwedish)) {
+            return parseForecasts(s);
+        } else if (stringContainsItemFromList(s, newsSynonymsSwedish)) {
+            return parseNews(s);
+        } else if(stringContainsItemFromList(s, busSynonymsSwedish)){
+            return parseBus(s);
         }
         return SpeechCommand.UNKNOWN;
+    }
+
+    private SpeechCommand parseBus(String s) {
+        if (stringContainsItemFromList(s, whenSynonymsSwedish)) {
+            return SpeechCommand.NEXT_BUS;
+        } else {
+            return SpeechCommand.UNKNOWN;
+        }
+    }
+
+    private SpeechCommand parseNews(String s) {
+        if (stringContainsItemFromList(s, showSynonymsSwedish)) {
+            return SpeechCommand.SHOW_NEWS;
+        } else if (stringContainsItemFromList(s, hideSynonymsSwedish)) {
+            return SpeechCommand.HIDE_NEWS;
+        } else if(stringContainsItemFromList(s, changeSynonymsSwedish)){
+            return SpeechCommand.CHANGE_NEWS_SOURCE;
+        } else {
+            return SpeechCommand.UNKNOWN;
+        }
+    }
+
+    private SpeechCommand parseForecasts(String s) {
+        if (stringContainsItemFromList(s, showSynonymsSwedish)) {
+            return SpeechCommand.SHOW_FORECASTS;
+        } else if (stringContainsItemFromList(s, hideSynonymsSwedish)) {
+            return SpeechCommand.HIDE_FORECASTS;
+        } else {
+            return SpeechCommand.UNKNOWN;
+        }
     }
 
     private SpeechCommand parseLights(String s) {

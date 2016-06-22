@@ -1,27 +1,43 @@
 package se.jakobkrantz.magicmirror;
 
-import com.google.cloud.speech.v1.RecognizeResponse;
-import com.google.protobuf.TextFormat;
-import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
+import com.github.fedy2.weather.YahooWeatherService;
+import com.github.fedy2.weather.data.Astronomy;
+import com.github.fedy2.weather.data.Channel;
+import com.github.fedy2.weather.data.Forecast;
+import com.github.fedy2.weather.data.unit.DegreeUnit;
+import com.github.fedy2.weather.data.unit.Time;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 import se.jakobkrantz.magicmirror.downloaders.SearchJourneysTask;
 import se.jakobkrantz.magicmirror.downloaders.SearchStationsTask;
 import se.jakobkrantz.magicmirror.hue.HueController;
+import se.jakobkrantz.magicmirror.news.NewsWrapper;
 import se.jakobkrantz.magicmirror.sensors.PirMotionDetector;
 import se.jakobkrantz.magicmirror.skanetrafikenAPI.*;
-import se.jakobkrantz.magicmirror.smhi.*;
-import se.jakobkrantz.magicmirror.speech.SpeechRecognizer;
+import se.jakobkrantz.magicmirror.smhi.Forecasts;
+import se.jakobkrantz.magicmirror.smhi.HourlyForecast;
+import se.jakobkrantz.magicmirror.smhi.SMHIWeatherAPI;
+import se.jakobkrantz.magicmirror.smhi.WeatherUtils;
+import se.jakobkrantz.magicmirror.speech.SpeechRecognizerGoogle;
+import se.jakobkrantz.magicmirror.speech.TextToSpeech;
+import se.jakobkrantz.magicmirror.speech.VoiceCommandListener;
 import se.jakobkrantz.magicmirror.speech.VoiceParser;
 import se.jakobkrantz.magicmirror.util.Greetings;
 
+import javax.speech.AudioException;
+import javax.speech.EngineException;
+import javax.xml.bind.JAXBException;
+import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -38,7 +54,7 @@ public class HomeScreenController implements Initializable {
     private Label timeToDepLabel;
 
     @FXML
-    private Label weatherFontLabel;
+    private ImageView weatherIconView;
 
     @FXML
     private Label currentWeatherLabel;
@@ -69,6 +85,12 @@ public class HomeScreenController implements Initializable {
 
     @FXML
     private Label insideTemperatureLabel;
+    @FXML
+    private ImageView windDirectionImage;
+    @FXML
+    private VBox newsContainer;
+    @FXML
+    private HBox forecastContainer;
 
     private List<Label> dayLabels;
     private List<Label> lowLabels;
@@ -79,22 +101,47 @@ public class HomeScreenController implements Initializable {
 
     private HueController hue;
     private SMHIWeatherAPI smhiWeatherAPI;
-    private RecognizeClient recognizeClient;
+    private YahooWeatherService yahooWeatherService;
     private VoiceParser voiceParser;
+    private NewsWrapper news;
+    private SpeechRecognizerGoogle recognizerGoogle;
+
+    private TextToSpeech textToSpeech;
+    private String nextDeparture = "";
 
 
     public HomeScreenController() {
+
+        news = new NewsWrapper();
+
         smhiWeatherAPI = new SMHIWeatherAPI("13", "55.6");
+        try {
+            yahooWeatherService = new YahooWeatherService();
+        } catch (JAXBException e) {
+            e.printStackTrace();
+        }
+        recognizerGoogle = new SpeechRecognizerGoogle();
         voiceParser = new VoiceParser();
         String host = "speech.googleapis.com";
         Integer port = 443;
         Integer sampling = 16000;
-
+        textToSpeech = new TextToSpeech();
         try {
+            textToSpeech.init("kevin16");
+        } catch (EngineException e) {
+            e.printStackTrace();
+        } catch (AudioException e) {
+            e.printStackTrace();
+        } catch (PropertyVetoException e) {
+            e.printStackTrace();
+        }
+
+
+       /* try {
             recognizeClient = new RecognizeClient(host, port, sampling);
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     @Override
@@ -108,77 +155,127 @@ public class HomeScreenController implements Initializable {
         setFont(lowLabels, "Heiti SC");
         setFont(highLabels, "Heiti SC");
         setFont(textWeatherLabels, "Heiti SC");
+        //setWeatherFont(windDirectionLabel);
+        //windDirectionLabel.setText(Character.toString((char) 0xf0b1));
 
-        setWeatherFont(weatherFontLabel);
+
         greetingsLabel.setText("Greetings stranger!");
-
         setupDepartureUpdatesAndTemperature(30);
         updateWeatherForecastAndNews(10);
         setupClockUpdates(5);
-        //initMotionDetector();
-        //startVoiceCommands();
+        initMotionDetector();
         hue = new HueController();
         hue.findBridges();
+
+
     }
 
     @FXML
     public void startRecognize() {
-        System.out.println("HomeScreenController.startRecognize");
-        StreamObserver<RecognizeResponse> responseObserver = new StreamObserver<RecognizeResponse>() {
-            @Override
-            public void onNext(RecognizeResponse response) {
-                System.out.println("Received response: " + TextFormat.printToString(response));
-                String command = TextFormat.printToUnicodeString(response);
-                if(command.equals("") || command.equals(" ")){
-                    return;
+        if (recognizerGoogle == null || !recognizerGoogle.isAlive() && !recognizerGoogle.isRecognizing()) {
+            recognizerGoogle = new SpeechRecognizerGoogle();
+            recognizerGoogle.addListener(new VoiceCommandListener() {
+                @Override
+                public void onVoiceCommand(String command) {
+                    handleCommand(command);
                 }
-                VoiceParser.SpeechCommand cmd = voiceParser.parseText(command);
-                System.out.println("parsed command: " + cmd.toString());
-                switch (cmd) {
-                    case LIGHTS_ON_ALL:
-                        hue.changeLightDestination("BOTH");
-                        hue.toggleAllLights(true);
-                        break;
-                    case LIGHTS_OFF_ALL:
-                        hue.changeLightDestination("BOTH");
-                        hue.toggleAllLights(false);
-                        break;
-                    case LIGHTS_ON_HALLWAY:
-                        hue.changeLightDestination("HALLWAY");
-                        hue.toggleAllLights(true);
-                        break;
-                    case LIGHTS_OFF_HALLWAY:
-                        hue.changeLightDestination("HALLWAY");
-                        hue.toggleAllLights(false);
-                        break;
-                    case LIGHTS_ON_BEDROOM:
-                        hue.changeLightDestination("BED");
-                        hue.toggleAllLights(true);
-                        break;
-                    case LIGHTS_OFF_BEDROOM:
-                        hue.changeLightDestination("BED");
-                        hue.toggleAllLights(false);
-                        break;
-                    case LIGHTS_ON:
-                        hue.toggleAllLights(true);
-                        break;
-                    case LIGHTS_OFF:
-                        hue.toggleAllLights(false);
-                        hue.stopPulsing();
-                        break;
-                    case LIGHTS_CHANGE_ALL:
-                        hue.changeLightDestination("BOTH");
-                        break;
-                    case LIGHTS_CHANGE_BEDROOM:
-                        hue.changeLightDestination("BED");
-                        break;
-                    case LIGHTS_CHANGE_HALLWAY:
-                        hue.changeLightDestination("HALLWAY");
-                        break;
-                    case UNKNOWN:
-                        System.out.println("Command not found: " + command);
-                        break;
+
+                @Override
+                public void onStop() {
+                    System.out.println("Speech recognize stopped");
                 }
+            });
+            recognizerGoogle.start();
+        } else {
+            System.out.println("Already recognizing");
+        }
+    }
+
+    private void handleCommand(String command) {
+        if (command.equals("") || command.equals(" ")) {
+            return;
+        }
+        System.out.println("Got command: " + command);
+
+        VoiceParser.SpeechCommand cmd = voiceParser.parseText(command);
+        System.out.println("parsed command: " + cmd.toString());
+        switch (cmd) {
+            case LIGHTS_ON_ALL:
+                hue.changeLightDestination("BOTH");
+                hue.toggleAllLights(true);
+                break;
+            case LIGHTS_OFF_ALL:
+                hue.changeLightDestination("BOTH");
+                hue.toggleAllLights(false);
+                break;
+            case LIGHTS_ON_HALLWAY:
+                hue.changeLightDestination("HALLWAY");
+                hue.toggleAllLights(true);
+                break;
+            case LIGHTS_OFF_HALLWAY:
+                hue.changeLightDestination("HALLWAY");
+                hue.toggleAllLights(false);
+                break;
+            case LIGHTS_ON_BEDROOM:
+                hue.changeLightDestination("BED");
+                hue.toggleAllLights(true);
+                break;
+            case LIGHTS_OFF_BEDROOM:
+                hue.changeLightDestination("BED");
+                hue.toggleAllLights(false);
+                break;
+            case LIGHTS_ON:
+                hue.toggleAllLights(true);
+                break;
+            case LIGHTS_OFF:
+                hue.toggleAllLights(false);
+                hue.stopPulsing();
+                break;
+            case LIGHTS_CHANGE_ALL:
+                hue.changeLightDestination("BOTH");
+                break;
+            case LIGHTS_CHANGE_BEDROOM:
+                hue.changeLightDestination("BED");
+                break;
+            case LIGHTS_CHANGE_HALLWAY:
+                hue.changeLightDestination("HALLWAY");
+                break;
+            case SHOW_NEWS:
+                Platform.runLater(() -> newsContainer.setVisible(true));
+                break;
+            case HIDE_NEWS:
+                Platform.runLater(() -> newsContainer.setVisible(false));
+                break;
+            case SHOW_FORECASTS:
+                Platform.runLater(() -> forecastContainer.setVisible(true));
+                break;
+            case HIDE_FORECASTS:
+                Platform.runLater(() -> forecastContainer.setVisible(false));
+                break;
+            case CHANGE_NEWS_SOURCE:
+                news.changeNewsSource();
+                new Thread(() -> {
+                    String headlines = updateNewsHeadlines();
+                    Platform.runLater(() -> {
+                        newsHeadlinesLabel.setText(headlines);
+                    });
+
+                }).start();
+                break;
+            case NEXT_BUS:
+                try {
+                    textToSpeech.doSpeak("Next bus departures in" +  this.nextDeparture);
+                } catch (EngineException e) {
+                    e.printStackTrace();
+                } catch (AudioException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            case UNKNOWN:
+                System.out.println("Command not found: " + command);
+                break;
+        }
                /*
                 } else if (command.equals("UP THE BRIGHTNESS ")) {
                     hue.changeBrightness(true);
@@ -206,100 +303,11 @@ public class HomeScreenController implements Initializable {
                 }
                 */
 
-                final String destination = command;
+        final String destination = command;
 
-                Platform.runLater(() -> {
-                    greetingsLabel.setText(destination);
-                });
-            }
-
-            @Override
-            public void onError(Throwable error) {
-                Status status = Status.fromThrowable(error);
-                System.out.println("recognize failed: {0}" + status);
-                try {
-                    recognizeClient.shutdown();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onCompleted() {
-                System.out.println("recognize completed.");
-            }
-        };
-        if (!recognizeClient.isRecognizing()) {
-            new Thread(() -> {
-                try {
-                    recognizeClient.recognize(responseObserver);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
-            new java.util.Timer().schedule(
-                    new java.util.TimerTask() {
-                        @Override
-                        public void run() {
-                            try {
-                                recognizeClient.shutdown();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }, 30000
-            );
-
-        } else {
-            try {
-                recognizeClient.shutdown();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void startVoiceCommands() {
-        SpeechRecognizer speechRecognizer = new SpeechRecognizer();
-        speechRecognizer.addListener(command -> {
-            System.out.println("Got voice command: " + command);
-            if (command.equals("PUT LIGHTS ON ")) {
-                hue.toggleAllLights(true);
-            } else if (command.equals("TURN LIGHTS OFF ")) {
-                hue.toggleAllLights(false);
-                hue.stopPulsing();
-            } else if (command.equals("UP THE BRIGHTNESS ")) {
-                hue.changeBrightness(true);
-            } else if (command.equals("REDUCE BRIGHTNESS ")) {
-                hue.changeBrightness(false);
-            } else if (command.equals("TIME TO SLEEP ")) {
-                hue.setBrightness(30);
-            } else if (command.equals("CHANGE LIGHT ")) {
-                command = hue.changeLightDestination();
-            } else if (command.equals("PULSING LIGHT ") || command.equals("DISCO START ")) {
-                hue.pulseLights();
-            } else if (command.equals("STOP PULSING ")) {
-                hue.stopPulsing();
-            } else if (command.equals("MAXIMUM LIGHT LEVEL ")) {
-                hue.setBrightness(254);
-            } else if (command.equals("HELP ME PLEASE ")) {
-                command = "PUT LIGHTS ON\n" +
-                        "TURN LIGHTS OFF\n" +
-                        "UP THE BRIGHTNESS\n" +
-                        "REDUCE BRIGHTNESS\n" +
-                        "TIME TO SLEEP\n" +
-                        "CHANGE LIGHT\n" +
-                        "MAXIMUM LIGHT LEVEL\n" +
-                        "HELP ME";
-            }
-
-            final String destination = command;
-
-            Platform.runLater(() -> {
-                greetingsLabel.setText(destination);
-            });
+        Platform.runLater(() -> {
+            greetingsLabel.setText(destination);
         });
-        speechRecognizer.start();
     }
 
     /**
@@ -317,29 +325,6 @@ public class HomeScreenController implements Initializable {
      * Sets up and initializes the PIR motion detector
      */
     private void initMotionDetector() {
-        StreamObserver<RecognizeResponse> responseObserver = new StreamObserver<RecognizeResponse>() {
-            @Override
-            public void onNext(RecognizeResponse response) {
-                System.out.println("Received response: " + TextFormat.printToString(response));
-            }
-
-            @Override
-            public void onError(Throwable error) {
-                System.out.println(error);
-                Status status = Status.fromThrowable(error);
-                System.out.println("recognize failed: {0}" + status);
-                try {
-                    recognizeClient.shutdown();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onCompleted() {
-                System.out.println("recognize completed.");
-            }
-        };
         new Thread(() -> {
             PirMotionDetector motionDetector = new PirMotionDetector();
             motionDetector.setMotionDetectionListener(
@@ -350,7 +335,6 @@ public class HomeScreenController implements Initializable {
                                 System.out.println("Motion Detected!");
                                 showMessageDependingOnTime();
                             });
-
                             startRecognize();
                         }
 
@@ -426,31 +410,27 @@ public class HomeScreenController implements Initializable {
      */
     private void updateWeatherForecastAndNews(int updateInterval) {
         Runnable updateWeather = () -> {
-            System.out.println("updateInterval = [" + updateInterval + "]");
             Forecasts f = smhiWeatherAPI.getForecasts();
             HourlyForecast weatherNow = f.getCurrentWeather();
-            System.out.println(weatherNow.toString());
 
-
-            StringBuilder sb = updateNewsHeadlines();
-
-
+            String headlines = updateNewsHeadlines();
             Platform.runLater(() -> {
-                newsHeadlinesLabel.setText(sb.toString());
-                weatherFontLabel.setText(WeatherConditionCodes.fromInt(weatherNow.getWeatherSymbol()).toString());
+                newsHeadlinesLabel.setText(headlines);
+                Image image = new Image(getClass().getResourceAsStream("/weather-icons/" + WeatherUtils.fileFromInt(weatherNow.getWeatherSymbol())));
+                weatherIconView.setImage(image);
                 String feelsLike = WeatherUtils.getHeatIndex(weatherNow.getTemp(), weatherNow.getRelativeHumidity());
                 currentWeatherLabel.setText(weatherNow.getTemp() + "\u2103" + "\n" + "feels like " + feelsLike + "\u2103" + "\nWind speed " + weatherNow.getWindVelocity() + "m/s");
-
+                //windDirectionLabel.setRotate(weatherNow.getWindDirection());
+                image = new Image(getClass().getResourceAsStream("/weather-icons/" + "wind_arrow.png"));
+                windDirectionImage.setImage(image);
+                windDirectionImage.setRotate(weatherNow.getWindDirection());
             });
-            /*YahooWeatherService service;
+
             try {
-                service = new YahooWeatherService();
-                Channel channel = service.getForecast("898091", DegreeUnit.CELSIUS);
-                List<Forecast> forecasts = channel.getItem().getForecasts();
-                //StringBuilder sb = updateNewsHeadlines();
-
-
+                final Channel channel = yahooWeatherService.getForecast("898091", DegreeUnit.CELSIUS);
+                final List<Forecast> forecasts = channel.getItem().getForecasts();
                 Platform.runLater(() -> {
+
                     Forecast tf;
                     for (int i = 0; i < forecasts.size() && i < 5; i++) {
                         tf = forecasts.get(i);
@@ -459,33 +439,15 @@ public class HomeScreenController implements Initializable {
                         highLabels.get(i).setText(tf.getHigh() + "°C");
                         textWeatherLabels.get(i).setText(tf.getText());
                     }
-                    Condition cond = channel.getItem().getCondition();
-                    //TODO Check not null
-                    Wind wind = channel.getWind();
-                    int feelsLike = wind.getChill();
-                    float windSpeed = wind.getSpeed();
-                    int windDirection = wind.getDirection();
-                    System.out.println("Feels like: " + feelsLike + " wind speed: " + windSpeed + " direction: " + windDirection);
                     Astronomy as = channel.getAstronomy();
                     Time sunRise = as.getSunrise();
                     Time sunset = as.getSunset();
                     System.out.println("Sunrise: " + sunRise.toString() + " Sunset: " + sunset.toString());
-
-                    Atmosphere atm = channel.getAtmosphere();
-                    float viability = atm.getVisibility();
-                    System.out.println("Visability: " + viability);
-                    System.out.println(atm.getRising().toString());
-
-                    currentWeatherLabel.setText(cond.getTemp() + "\u2103" + "\n" + "feels like " + feelsLike + "\u2103" + "\n" + cond.getText() + "\nWind speed " + Math.round(windSpeed / 3.6) + "m/s");
-
-                    weatherFontLabel.setText(WeatherConditionCodes.fromInt(cond.getCode()).toString());
-                    //newsHeadlinesLabel.setText(sb.toString());
-
                 });
 
             } catch (Exception e) {
                 e.printStackTrace();
-            }*/
+            }
         };
 
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -495,17 +457,14 @@ public class HomeScreenController implements Initializable {
     /**
      * Pulls fresh news from Yahoo RSS feed and updates the GUI
      */
-    private StringBuilder updateNewsHeadlines() {
-        System.out.println("News update");
-
-        YahooNews news = new YahooNews();
+    private String updateNewsHeadlines() {
         List<String> headlines = news.getLatestHeadlines();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < headlines.size() && i < 6; i++) {
             System.out.println("Headline: " + headlines.get(i));
             sb.append(headlines.get(i).split(" - ")[0] + "\n");
         }
-        return sb;
+        return sb.toString();
     }
 
     /**
@@ -533,6 +492,7 @@ public class HomeScreenController implements Initializable {
 
             SearchJourneysTask jTask = new SearchJourneysTask();
             final ArrayList<Journey> js = jTask.download(journey);
+            this.nextDeparture = TimeAndDateConverter.timeToDeparture(js.get(0).getDepDateTime()) + "minutes to Lund LTH";
 
             final StringBuilder sb = new StringBuilder();
             for (Journey j : js) {

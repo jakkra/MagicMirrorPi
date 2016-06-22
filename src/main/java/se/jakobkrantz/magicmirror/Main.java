@@ -19,7 +19,7 @@ public class Main extends Application {
         try
         {
             url  = getClass().getResource( sceneFile );
-            root = FXMLLoader.load( url );
+            root = FXMLLoader.load(url);
             System.out.println( "  fxmlResource = " + sceneFile );
         }
         catch ( Exception ex )

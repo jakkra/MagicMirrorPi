@@ -1,6 +1,8 @@
 package se.jakobkrantz.magicmirror.smhi;
 
 import java.text.DecimalFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Created by jakkra on 2016-05-22.
@@ -43,5 +45,26 @@ public class WeatherUtils {
         double feelsLikeC = (feelsLikeF - 32) * ((double) 5 / (double) 9);
 
         return df.format(feelsLikeC);
+    }
+
+    /**
+     * Maps the SMHI! Weather codes to the weather icons font characters
+     * http://opendata.smhi.se/apidocs/metfcst/parameters.html#parameter-wsymb
+     *
+     * Icons from http://fa2png.io/r/weather-icons/
+     */
+    public static String fileFromInt(int smhiCode) {
+        return smhiCode + "_" + convertCodeDependingOnTime(smhiCode) + ".png";
+    }
+
+    private static String convertCodeDependingOnTime(int code) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        if (hour >= 7 && hour < 18) { //Day
+            return "day";
+        } else { //Night
+            return "night";
+        }
     }
 }

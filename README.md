@@ -20,6 +20,7 @@ New is voice recognition, which I currently use to control my Philips Hue lights
 ## Installation
 TBA
 
+pr      mvn install:install-file -Dfile=/home/pi/Documents/MagicMirror/libs/huesdkresources-1.0.jar -DgroupId=com.philips.lightning -DartifactId=huesdkresources -Dversion=1.0 -Dpackaging=jar
 [Ds18b20 temperature sensor installation](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-11-ds18b20-temperature-sensing/hardware)
 
 [PIR motion sensor of this type](https://learn.adafruit.com/pir-passive-infrared-proximity-motion-sensor)

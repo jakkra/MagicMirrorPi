@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.web.*?>
+<?import javafx.scene.image.*?>
 <?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.text.*?>
@@ -43,6 +45,7 @@
                   <VBox alignment="CENTER_RIGHT" prefHeight="200.0" prefWidth="150.0" />
                   <VBox alignment="CENTER_RIGHT" prefHeight="401.0" prefWidth="279.0">
                      <children>
+                        <ImageView fx:id="windDirectionImage" fitHeight="60.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" />
                         <Label fx:id="currentWeatherLabel" text="N/A" textFill="#a3a2a2e7">
                            <font>
                               <Font name="Heiti SC Light" size="24.0" />
@@ -50,14 +53,11 @@
                         </Label>
                      </children>
                   </VBox>
-                  <Label fx:id="weatherFontLabel" text="Label" textFill="WHITE">
-                     <font>
-                        <Font name="System Italic" size="13.0" />
-                     </font></Label>
+                  <ImageView fx:id="weatherIconView" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                   <VBox alignment="CENTER_RIGHT" />
                </children>
             </HBox>
-            <HBox alignment="TOP_RIGHT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <HBox fx:id="forecastContainer" alignment="TOP_RIGHT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <children>
                   <VBox alignment="TOP_RIGHT" prefHeight="200.0" prefWidth="100.0" spacing="5.0">
                      <children>
@@ -213,7 +213,7 @@
                   </Label>
                </children>
             </HBox>
-            <VBox prefHeight="200.0" prefWidth="100.0" spacing="8.0" GridPane.rowIndex="1">
+            <VBox fx:id="newsContainer" prefHeight="200.0" prefWidth="100.0" spacing="8.0" GridPane.rowIndex="1">
                <children>
                   <Label text="Latest headlines" textFill="#938686">
                      <font>

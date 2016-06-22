@@ -22,13 +22,14 @@
 // API Manager > Credentials > Create credentials > Service account key > New service account.
 //
 // Then set environment variable GOOGLE_APPLICATION_CREDENTIALS to the full path of that file.
-
+/*
 package se.jakobkrantz.magicmirror;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.speech.v1.*;
-import com.google.cloud.speech.v1.InitialRecognizeRequest.AudioEncoding;
+
+
 import com.google.protobuf.ByteString;
+import google.cloud.speech.v1.*;
 import io.grpc.ManagedChannel;
 import io.grpc.auth.ClientAuthInterceptor;
 import io.grpc.netty.NegotiationType;
@@ -50,6 +51,7 @@ import java.util.concurrent.Semaphore;
 /**
  * Client that sends streaming audio to Speech.Recognize and returns streaming transcript.
  */
+/*
 public class RecognizeClient {
 
     private static final float SAMPLE_RATE = 16000.0f;
@@ -69,9 +71,11 @@ public class RecognizeClient {
     private Semaphore runningSem;
     private boolean isRecognizing;
 
-    /**
+    */
+/**
      * Construct client connecting to Cloud Speech server at {@code host:port}.
-     */
+     *//*
+
     public RecognizeClient(String host, int port, int samplingRate) throws IOException {
         this.host = host;
         this.port = port;
@@ -99,9 +103,11 @@ public class RecognizeClient {
         runningSem.release();
     }
 
-    /**
+    */
+/**
      * Send streaming recognize requests to server.
-     */
+     *//*
+
     public void recognize(StreamObserver<RecognizeResponse> responseObserver) throws InterruptedException, IOException {
         if (isRecognizing) {
             responseObserver.onError(new Throwable("Already recognizing!"));
@@ -115,7 +121,7 @@ public class RecognizeClient {
         try {
             // Build and send a RecognizeRequest containing the parameters for processing the audio.
             InitialRecognizeRequest initial = InitialRecognizeRequest.newBuilder()
-                    .setEncoding(AudioEncoding.LINEAR16)
+                    .setEncoding(InitialRecognizeRequest.AudioEncoding.LINEAR16)
                     .setSampleRate(samplingRate)
                     .setLanguageCode("sv-SE")
                     .setInterimResults(true)
@@ -168,6 +174,9 @@ public class RecognizeClient {
         }
         // Mark the end of requests.
         requestObserver.onCompleted();
+
+        // Receiving happens asynchronously.
+        System.out.println("Stopping before isRec = false");
         runningSem.release();
         isRecognizing = false;
     }
@@ -176,3 +185,4 @@ public class RecognizeClient {
         return isRecognizing;
     }
 }
+*/

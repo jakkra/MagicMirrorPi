@@ -6,4 +6,5 @@ package se.jakobkrantz.magicmirror.speech;
 
 public interface VoiceCommandListener {
     void onVoiceCommand(String command);
+    void onStop();
 }
