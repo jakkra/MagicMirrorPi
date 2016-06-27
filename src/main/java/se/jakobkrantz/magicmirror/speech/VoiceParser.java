@@ -24,6 +24,7 @@ public class VoiceParser {
         SHOW_FORECASTS,
         CHANGE_NEWS_SOURCE,
         NEXT_BUS,
+        CREATE_REMINDER,
         UNKNOWN,
     }
 
@@ -34,12 +35,12 @@ public class VoiceParser {
         UNKNOWN
     }
 
-    private String[] lampSynonymsSwedish = {"lampa", "lampan", "lampor", "lamporna", "ljus", "ljuset", "ljusen", "ljuset", "lyset", "taket", "i taket"};
-    private String[] onSynonymsSwedish = {"sätt på", "till", "tänd", "tända", "starta"};
-    private String[] offSynonymsSwedish = {"stäng av", "från", "släck", "släcka", "stoppa"};
+    private String[] lampSynonymsSwedish = {"lampa", "lampan", "lampor", "lamporna", "ljus", "ljuset", "ljusen", "ljuset", "lyset", "taket", "i taket", "i hallen", "tänd", "släck"};
+    private String[] onSynonymsSwedish = {"sätt på", "till", "tänd", "tända", "starta", "händer"};
+    private String[] offSynonymsSwedish = {"stäng av", "stäng av", "stänga", "från", "släck", "släcka", "stoppa", "fläck", "fläckt", "fläkt"};
     private String[] allSynonymsSwedish = {"alla", "samtliga"};
     private String[] bedroomSynonymsSwedish = {"säng", "sängen", "sängens", "sovrum", "sovrums", "sovrummet", "sovrummets"};
-    private String[] hallwaySynonymsSwedish = {"hall", "hallen", "hallens", "dörr", "dörren"};
+    private String[] hallwaySynonymsSwedish = {"hall", "hallen", "hallens", "dörr", "dörren", "Halland"};
     private String[] busSynonymsSwedish = {"bussen", "buss", "bus"};
 
 
@@ -50,8 +51,9 @@ public class VoiceParser {
     private String[] forecastsSynonymsSwedish = {"väder", "vädret", "prognos", "prognoserna"};
     private String[] whenSynonymsSwedish = {"när", "byt", "går"};
 
+    private String[] remindSynonymsSwedish = {"påminn"};
 
-
+    private ReminderParser reminderParser = new ReminderParser();
 
     public SpeechCommand parseText(String s) {
         if (stringContainsItemFromList(s, lampSynonymsSwedish)) {
@@ -62,6 +64,8 @@ public class VoiceParser {
             return parseNews(s);
         } else if(stringContainsItemFromList(s, busSynonymsSwedish)){
             return parseBus(s);
+        } else if(stringContainsItemFromList(s, remindSynonymsSwedish)){
+            return reminderParser.parse(s);
         }
         return SpeechCommand.UNKNOWN;
     }

@@ -6,6 +6,7 @@ se/jakobkrantz/magicmirror/skanetrafikenAPI/RouteLink.class
 se/jakobkrantz/magicmirror/hue/HueController$1.class
 se/jakobkrantz/magicmirror/skanetrafikenAPI/Station.class
 se/jakobkrantz/magicmirror/skanetrafikenAPI/Point.class
+se/jakobkrantz/magicmirror/remindersAPI/NodeReminder.class
 cmu/edu/cmu/pocketsphinx/SWIGTYPE_p_ngram_model_set_iter_t.class
 cmu/edu/cmu/pocketsphinx/SWIGTYPE_p_ps_nbest_t.class
 se/jakobkrantz/magicmirror/skanetrafikenAPI/TimeAndDateConverter.class
@@ -22,6 +23,7 @@ se/jakobkrantz/magicmirror/smhi/JsonWeatherAsObject.class
 com/gtranslate/text/Text.class
 se/jakobkrantz/magicmirror/sensors/TemperatureSensorReader.class
 cmu/edu/cmu/pocketsphinx/FsgModel.class
+se/jakobkrantz/magicmirror/speech/ReminderParser.class
 se/jakobkrantz/magicmirror/HomeScreenController$3.class
 se/jakobkrantz/magicmirror/skanetrafikenAPI/Journey.class
 se/jakobkrantz/magicmirror/speech/VoiceParser.class
