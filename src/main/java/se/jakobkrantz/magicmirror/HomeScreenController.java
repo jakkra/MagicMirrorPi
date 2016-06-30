@@ -23,6 +23,7 @@ import se.jakobkrantz.magicmirror.downloaders.SearchStationsTask;
 import se.jakobkrantz.magicmirror.hue.HueController;
 import se.jakobkrantz.magicmirror.news.NewsWrapper;
 import se.jakobkrantz.magicmirror.sensors.PirMotionDetector;
+import se.jakobkrantz.magicmirror.sensors.TemperatureSensorReader;
 import se.jakobkrantz.magicmirror.skanetrafikenAPI.*;
 import se.jakobkrantz.magicmirror.smhi.Forecasts;
 import se.jakobkrantz.magicmirror.smhi.HourlyForecast;
@@ -33,12 +34,15 @@ import se.jakobkrantz.magicmirror.speech.TextToSpeech;
 import se.jakobkrantz.magicmirror.speech.VoiceCommandListener;
 import se.jakobkrantz.magicmirror.speech.VoiceParser;
 import se.jakobkrantz.magicmirror.util.Greetings;
+import se.jakobkrantz.magicmirror.util.TemperatureLogger;
 
 import javax.speech.AudioException;
 import javax.speech.EngineException;
 import javax.xml.bind.JAXBException;
 import java.beans.PropertyVetoException;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -263,7 +267,7 @@ public class HomeScreenController implements Initializable {
                 }).start();
                 break;
             case NEXT_BUS:
-                try {
+                /*try {
                     textToSpeech.doSpeak("Next bus departures in" +  this.nextDeparture);
                 } catch (EngineException e) {
                     e.printStackTrace();
@@ -271,7 +275,20 @@ public class HomeScreenController implements Initializable {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                }*/
+                break;
+            case TURN_OFF:
+                try {
+                    Process p = Runtime.getRuntime().exec("sudo shutdown -h now");
+                    BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                    String s;
+                    while ((s = in.readLine()) != null) {
+                        System.out.println("Turning off: " + s);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+
             case UNKNOWN:
                 System.out.println("Command not found: " + command);
                 break;
@@ -509,25 +526,18 @@ public class HomeScreenController implements Initializable {
             }
             System.out.println(sb.toString());
 
-            Platform.runLater(() -> {
-                nextJourneyLabel.setText("Upcoming departures to " + js.get(0).getEndStation().getStationName() + " in:\n");
-                timeToDepLabel.setText(sb.toString());
-                dateDayLabel.setText(getDatePrint());
-
-            });
-
-            /*TemperatureSensorReader temperatureSensorReader = new TemperatureSensorReader();
+            TemperatureSensorReader temperatureSensorReader = new TemperatureSensorReader();
             double insideTemp = temperatureSensorReader.readTemperatureFirstSensor();
             String timeStamp = new SimpleDateFormat("yyyy/MM/dd HH:mm").format(new Date());
             String logMsg = timeStamp + " : " + insideTemp + "°C";
-            System.out.println(logMsg);
             TemperatureLogger.appendLog(logMsg + "\n");
-            System.out.println("------------TEMPERATURE IS: " + logMsg);*/
+            System.out.println("------------TEMPERATURE IS: " + logMsg);
+
             Platform.runLater(() -> {
                 nextJourneyLabel.setText("Upcoming departures to " + js.get(0).getEndStation().getStationName() + " in:\n");
                 timeToDepLabel.setText(sb.toString());
                 dateDayLabel.setText(getDatePrint());
-                //insideTemperatureLabel.setText("Inside " + insideTemp + "°C");
+                insideTemperatureLabel.setText("Inside " + insideTemp + "°C");
 
             });
 

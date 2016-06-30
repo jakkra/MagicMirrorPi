@@ -23,7 +23,7 @@ public class NodeReminder {
     public void postReminder(String title, Date date, String email) throws IOException {
         System.out.println(date);
         Date d = new Date();
-        SimpleDateFormat df = new SimpleDateFormat("yyy-MM-dd'T'HH:mm:ss'Z'");
+        SimpleDateFormat df = new SimpleDateFormat("yyy-MM-dd'T'HH:mm:ss");
         System.out.println(df.format(date));
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {

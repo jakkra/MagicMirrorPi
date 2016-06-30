@@ -131,7 +131,7 @@ limitations under the License.
         <dependency>
             <groupId>com.pi4j</groupId>
             <artifactId>pi4j-device</artifactId>
-            <version>1.0</version>
+            <version>1.1-SNAPSHOT</version>
         </dependency>
         <!-- http://mvnrepository.com/artifact/com.pi4j/pi4j-gpio-extension -->
         <dependency>
@@ -207,15 +207,6 @@ limitations under the License.
             <artifactId>httpclient</artifactId>
             <version>4.5.2</version>
         </dependency>
-
-
-
-
-
-
-
-
-
 
 
     </dependencies>

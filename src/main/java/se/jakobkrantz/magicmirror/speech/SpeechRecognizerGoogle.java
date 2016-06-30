@@ -49,9 +49,9 @@ public class SpeechRecognizerGoogle extends Thread {
                 System.out.println("Output of the command (if any):\n");
                 try {
                     while ((s = in.readLine()) != null) {
-                        System.out.println("Recognizer: " + s);
-
                         if(s.contains("transcript:")){
+                            System.out.println("Recognizer: " + s);
+
 
                             int start = s.indexOf("\"");
                             int end = s.lastIndexOf("\"");

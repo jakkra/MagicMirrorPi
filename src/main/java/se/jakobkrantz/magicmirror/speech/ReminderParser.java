@@ -94,13 +94,51 @@ public class ReminderParser {
     private Calendar increaseTodayDate(String num, String unit) throws Exception {
         Calendar c = Calendar.getInstance();
         int calUnit = getCalUnit(unit);
-        if (calUnit != -1) {
-            c.add(calUnit, Integer.parseInt(num));
+        int numUnits = wordToInt(num);
+        if (calUnit != -1 && numUnits != -1) {
+            c.add(calUnit, numUnits);
             return c;
         } else {
             throw new Exception("Parse error near " + num + " " + unit);
         }
     }
+
+    private int wordToInt(String s) {
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        switch (s) {
+            case "en":
+                return 1;
+            case "två":
+                return 2;
+            case "tre":
+                return 3;
+            case "fyra":
+                return 4;
+            case "fem":
+                return 5;
+            case "sex":
+                return 6;
+            case "sju":
+                return 7;
+            case "åtta":
+                return 8;
+            case "nio":
+                return 9;
+            case "tio":
+                return 10;
+            case "elva":
+                return 11;
+            case "tolv":
+                return 12;
+            default:
+                return -1;
+        }
+    }
+
 
     private Calendar getTomorrowAt(String hour, String minute) throws Exception {
         Calendar c = Calendar.getInstance();

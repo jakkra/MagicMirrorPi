@@ -25,6 +25,7 @@ public class VoiceParser {
         CHANGE_NEWS_SOURCE,
         NEXT_BUS,
         CREATE_REMINDER,
+        TURN_OFF,
         UNKNOWN,
     }
 
@@ -35,7 +36,7 @@ public class VoiceParser {
         UNKNOWN
     }
 
-    private String[] lampSynonymsSwedish = {"lampa", "lampan", "lampor", "lamporna", "ljus", "ljuset", "ljusen", "ljuset", "lyset", "taket", "i taket", "i hallen", "tänd", "släck"};
+    private String[] lampSynonymsSwedish = {"lampa", "lampan", "lampor", "lamporna", "ljus", "ljuset", "ljusen", "ljuset", "lyset", "taket", "i taket", "i hallen", "tänd", "släck", "ljus", "ljusen"};
     private String[] onSynonymsSwedish = {"sätt på", "till", "tänd", "tända", "starta", "händer"};
     private String[] offSynonymsSwedish = {"stäng av", "stäng av", "stänga", "från", "släck", "släcka", "stoppa", "fläck", "fläckt", "fläkt"};
     private String[] allSynonymsSwedish = {"alla", "samtliga"};
@@ -53,6 +54,8 @@ public class VoiceParser {
 
     private String[] remindSynonymsSwedish = {"påminn"};
 
+    private String[] turnOffMirrorSwedish = {"stäng av spegeln", "spegel stäng av dig", "gå och sov spegel"};
+
     private ReminderParser reminderParser = new ReminderParser();
 
     public SpeechCommand parseText(String s) {
@@ -66,6 +69,8 @@ public class VoiceParser {
             return parseBus(s);
         } else if(stringContainsItemFromList(s, remindSynonymsSwedish)){
             return reminderParser.parse(s);
+        } else if(stringContainsItemFromList(s, turnOffMirrorSwedish)){
+            return SpeechCommand.TURN_OFF;
         }
         return SpeechCommand.UNKNOWN;
     }
