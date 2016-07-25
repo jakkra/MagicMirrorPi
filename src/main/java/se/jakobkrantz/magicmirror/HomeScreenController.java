@@ -22,6 +22,7 @@ import se.jakobkrantz.magicmirror.downloaders.SearchJourneysTask;
 import se.jakobkrantz.magicmirror.downloaders.SearchStationsTask;
 import se.jakobkrantz.magicmirror.hue.HueController;
 import se.jakobkrantz.magicmirror.news.NewsWrapper;
+import se.jakobkrantz.magicmirror.remindersAPI.NodeReminder;
 import se.jakobkrantz.magicmirror.sensors.PirMotionDetector;
 import se.jakobkrantz.magicmirror.sensors.TemperatureSensorReader;
 import se.jakobkrantz.magicmirror.skanetrafikenAPI.*;
@@ -112,12 +113,15 @@ public class HomeScreenController implements Initializable {
 
     private TextToSpeech textToSpeech;
     private String nextDeparture = "";
+    private String insideTemp;
+
+    private NodeReminder tempLogger;
 
 
     public HomeScreenController() {
 
         news = new NewsWrapper();
-
+        tempLogger = new NodeReminder();
         smhiWeatherAPI = new SMHIWeatherAPI("13", "55.6");
         try {
             yahooWeatherService = new YahooWeatherService();
@@ -126,9 +130,6 @@ public class HomeScreenController implements Initializable {
         }
         recognizerGoogle = new SpeechRecognizerGoogle();
         voiceParser = new VoiceParser();
-        String host = "speech.googleapis.com";
-        Integer port = 443;
-        Integer sampling = 16000;
         textToSpeech = new TextToSpeech();
         try {
             textToSpeech.init("kevin16");
@@ -352,7 +353,12 @@ public class HomeScreenController implements Initializable {
                                 System.out.println("Motion Detected!");
                                 showMessageDependingOnTime();
                             });
-                            startRecognize();
+                            try {
+                                tempLogger.postMotion();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            // startRecognize();
                         }
 
                         @Override
@@ -431,6 +437,13 @@ public class HomeScreenController implements Initializable {
             HourlyForecast weatherNow = f.getCurrentWeather();
 
             String headlines = updateNewsHeadlines();
+            try {
+                if(insideTemp != null) {
+                    tempLogger.postTemperature(insideTemp + "");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             Platform.runLater(() -> {
                 newsHeadlinesLabel.setText(headlines);
                 Image image = new Image(getClass().getResourceAsStream("/weather-icons/" + WeatherUtils.fileFromInt(weatherNow.getWeatherSymbol())));
@@ -527,7 +540,8 @@ public class HomeScreenController implements Initializable {
             System.out.println(sb.toString());
 
             TemperatureSensorReader temperatureSensorReader = new TemperatureSensorReader();
-            double insideTemp = temperatureSensorReader.readTemperatureFirstSensor();
+            insideTemp = temperatureSensorReader.readTemperatureFirstSensor() + "";
+
             String timeStamp = new SimpleDateFormat("yyyy/MM/dd HH:mm").format(new Date());
             String logMsg = timeStamp + " : " + insideTemp + "°C";
             TemperatureLogger.appendLog(logMsg + "\n");
